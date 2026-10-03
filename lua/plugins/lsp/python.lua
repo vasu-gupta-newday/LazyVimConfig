@@ -11,6 +11,8 @@ return {
     "neovim/nvim-lspconfig",
     opts = {
       servers = {
+        basedpyright = { enabled = false },
+        pylsp = { enabled = false },
         pyright = {
           settings = {
             python = {
