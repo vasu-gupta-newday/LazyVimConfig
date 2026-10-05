@@ -4,21 +4,47 @@ return {
     "nvim-treesitter/nvim-treesitter",
     opts = { ensure_installed = { "c_sharp" } },
   },
-  -- OmniSharp
+  -- Roslyn (Microsoft.CodeAnalysis.LanguageServer)
+  -- Replaces OmniSharp, which targets net6.0 and fails to load projects
+  -- built with modern .NET 8/9/10 SDKs. LazyVim auto-installs the mason
+  -- package "roslyn-language-server" and auto-enables "roslyn_ls".
   {
     "neovim/nvim-lspconfig",
     opts = {
       servers = {
-        omnisharp = {
+        -- Make sure OmniSharp never attaches. The mason package may still be
+        -- installed, and mason-lspconfig's automatic_enable would otherwise
+        -- enable it alongside roslyn_ls, causing duplicate/empty LSP results
+        -- (e.g. Snacks picker returning nothing for references/definitions).
+        omnisharp = { enabled = false },
+        -- LazyVim maps gD -> vim.lsp.buf.declaration for ALL servers with no
+        -- capability guard. roslyn_ls does not implement
+        -- "textDocument/declaration", so pressing gD errors. Re-declare the
+        -- global gD with `has = "declaration"` so it only binds when the
+        -- active server supports it (this entry overrides LazyVim's default
+        -- via opts_extend = { "servers.*.keys" }).
+        ["*"] = {
+          keys = {
+            { "gD", vim.lsp.buf.declaration, desc = "Goto Declaration", has = "declaration" },
+          },
+        },
+        roslyn_ls = {
+          -- roslyn_ls has no declaration support, so make gD go to the
+          -- definition instead (C# has no separate declaration vs definition).
+          keys = {
+            { "gD", vim.lsp.buf.definition, desc = "Goto Declaration" },
+          },
           settings = {
-            FormattingOptions = {
-              EnableEditorConfigSupport = true,
-              OrganizeImports = true,
+            ["csharp|background_analysis"] = {
+              dotnet_analyzer_diagnostics_scope = "fullSolution",
+              dotnet_compiler_diagnostics_scope = "fullSolution",
             },
-            RoslynExtensionsOptions = {
-              EnableAnalyzersSupport = true,
-              EnableImportCompletion = true,
-              AnalyzeOpenDocumentsOnly = true,
+            ["csharp|inlay_hints"] = {
+              csharp_enable_inlay_hints_for_implicit_object_creation = true,
+              csharp_enable_inlay_hints_for_implicit_variable_types = true,
+            },
+            ["csharp|code_lens"] = {
+              dotnet_enable_references_code_lens = true,
             },
           },
         },
