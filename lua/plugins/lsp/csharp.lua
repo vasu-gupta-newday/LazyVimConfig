@@ -65,6 +65,14 @@ return {
   -- Formatting
   {
     "stevearc/conform.nvim",
+    init = function()
+      vim.api.nvim_create_autocmd("FileType", {
+        pattern = "cs",
+        callback = function()
+          vim.b.autoformat = false
+        end,
+      })
+    end,
     opts = {
       formatters_by_ft = {
         cs = { "csharpier" },
