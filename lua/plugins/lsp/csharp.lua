@@ -68,8 +68,8 @@ return {
     init = function()
       vim.api.nvim_create_autocmd("FileType", {
         pattern = "cs",
-        callback = function()
-          vim.b.autoformat = false
+        callback = function(args)
+          vim.b[args.buf].autoformat = false
         end,
       })
     end,
